@@ -2,6 +2,15 @@ const { check } = require("express-validator");
 const usersRepo = require("../../repository/users");
 
 module.exports = {
+  requireTitle: check("title")
+    .trim()
+    .isLength({ min: 5, max: 40 })
+    .withMessage("Must be between 5 and 40 characters"),
+  requirePrice: check("price")
+    .trim()
+    .toFloat()
+    .isFloat({ min: 1 })
+    .withMessage("Must be a number greater than 1"),
   requireEmail: check("email")
     .trim()
     .normalizeEmail()
@@ -17,16 +26,16 @@ module.exports = {
     .trim()
     .isLength({ min: 4, max: 20 })
     .withMessage("Must be between 4 and 20 characters"),
-  requireConfirmPassword: check("confirmPassword")
+  requirePasswordConfirmation: check("passwordConfirmation")
     .trim()
     .isLength({ min: 4, max: 20 })
     .withMessage("Must be between 4 and 20 characters")
-    .custom((confirmPassword, { req }) => {
-      if (confirmPassword !== req.body.password) {
+    .custom(async (passwordConfirmation, { req }) => {
+      if (passwordConfirmation !== req.body.password) {
         throw new Error("Passwords must match");
       }
     }),
-  requireEmailExist: check("email")
+  requireEmailExists: check("email")
     .trim()
     .normalizeEmail()
     .isEmail()
@@ -34,7 +43,7 @@ module.exports = {
     .custom(async (email) => {
       const user = await usersRepo.getOneBy({ email });
       if (!user) {
-        throw new Error("Email not found");
+        throw new Error("Email not found!");
       }
     }),
   requireValidPasswordForUser: check("password")
